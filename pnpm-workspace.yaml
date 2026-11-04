@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+
+onlyBuiltDependencies:
+  - esbuild
+
+overrides:
+  '@skeuos-labs/mizmor': link:../mizmor

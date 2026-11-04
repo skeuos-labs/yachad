@@ -1,0 +1,16 @@
+{
+  "name": "yachad-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r run build",
+    "test": "pnpm -r run test",
+    "desktop": "pnpm --filter @skeuos-labs/yachad run tauri dev",
+    "desktop:web": "pnpm --filter @skeuos-labs/yachad run dev",
+    "desktop:build": "pnpm --filter @skeuos-labs/yachad run tauri build"
+  },
+  "overrides": {
+    "vite": "^6.1.0",
+    "tinypool": "^2.1.2"
+  }
+}
