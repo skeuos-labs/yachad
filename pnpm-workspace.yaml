@@ -6,3 +6,4 @@ onlyBuiltDependencies:
 
 overrides:
   '@skeuos-labs/mizmor': link:../mizmor
+  tinypool: ^2.1.2
