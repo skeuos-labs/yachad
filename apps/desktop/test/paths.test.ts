@@ -11,7 +11,21 @@ describe('Path Discovery & Smart Root Resolution', () => {
     // Verify expected subdirectories exist in candidate paths
     expect(paths.propresenter.some(p => p.includes('ProPresenter') && p.includes('Libraries'))).toBe(true);
     expect(paths.freeshow.some(p => p.includes('FreeShow') && p.includes('shows'))).toBe(true);
-    expect(paths.videopsalm.some(p => p.includes('VideoPsalm') && p.includes('Songbooks'))).toBe(true);
+    expect(paths.videopsalm.some(p => p.includes('VideoPsalm') && p.toLowerCase().includes('songbooks'))).toBe(true);
+  });
+
+  it('returns macOS paths: ProPresenter and FreeShow supported, VideoPsalm excluded', () => {
+    const macPaths = getDefaultSearchPaths('darwin');
+    expect(macPaths.propresenter.length).toBeGreaterThan(0);
+    expect(macPaths.freeshow.length).toBeGreaterThan(0);
+    expect(macPaths.videopsalm.length).toBe(0); // VideoPsalm is Windows-only
+  });
+
+  it('returns Linux paths: FreeShow supported, ProPresenter and VideoPsalm excluded', () => {
+    const linuxPaths = getDefaultSearchPaths('linux');
+    expect(linuxPaths.freeshow.length).toBeGreaterThan(0);
+    expect(linuxPaths.propresenter.length).toBe(0);
+    expect(linuxPaths.videopsalm.length).toBe(0);
   });
 
   it('resolves library subfolder when given software root directory', () => {

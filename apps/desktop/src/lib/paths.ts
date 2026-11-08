@@ -6,6 +6,12 @@ export interface DefaultPaths {
   videopsalm: string[];
 }
 
+export interface DetectedAppPaths {
+  propresenter: string | null;
+  freeshow: string | null;
+  videopsalm: string | null;
+}
+
 const SUBFOLDER_MAP: Record<SupportedApp, { suffix: string; subfolder: string }> = {
   propresenter: { suffix: '/libraries', subfolder: 'Libraries' },
   freeshow: { suffix: '/shows', subfolder: 'shows' },
@@ -13,13 +19,40 @@ const SUBFOLDER_MAP: Record<SupportedApp, { suffix: string; subfolder: string }>
 };
 
 /**
- * Returns standard search candidates for Windows or macOS
+ * Returns standard search candidates for Windows, macOS, or Linux
  */
 export function getDefaultSearchPaths(platform: string = typeof process !== 'undefined' ? process.platform : 'win32'): DefaultPaths {
-  const isWindows = platform === 'win32';
-  const userProfile = isWindows ? 'C:/Users/Current' : '/Users/Current';
-  const publicProfile = isWindows ? 'C:/Users/Public' : '/Users/Shared';
-  const appData = isWindows ? `${userProfile}/AppData/Roaming` : `${userProfile}/Library/Application Support`;
+  if (platform === 'darwin') {
+    const home = '/Users/Current';
+    return {
+      propresenter: [
+        `${home}/Documents/ProPresenter/Libraries`,
+        `${home}/Library/Application Support/RenewedVision/ProPresenter/Libraries`,
+      ],
+      freeshow: [
+        `${home}/Documents/FreeShow/shows`,
+        `${home}/Library/Application Support/FreeShow/shows`,
+      ],
+      videopsalm: [], // VideoPsalm is Windows-only
+    };
+  }
+
+  if (platform === 'linux') {
+    const home = '/home/current';
+    return {
+      propresenter: [], // ProPresenter is Windows and macOS only
+      freeshow: [
+        `${home}/Documents/FreeShow/shows`,
+        `${home}/.local/share/FreeShow/shows`,
+      ],
+      videopsalm: [], // VideoPsalm is Windows-only
+    };
+  }
+
+  // Windows defaults
+  const userProfile = 'C:/Users/Current';
+  const publicProfile = 'C:/Users/Public';
+  const appData = `${userProfile}/AppData/Roaming`;
 
   return {
     propresenter: [
@@ -31,8 +64,8 @@ export function getDefaultSearchPaths(platform: string = typeof process !== 'und
       `${appData}/FreeShow/shows`,
     ],
     videopsalm: [
-      `${userProfile}/Documents/VideoPsalm/Songbooks`,
-      `${publicProfile}/Documents/VideoPsalm/Songbooks`,
+      `${publicProfile}/Documents/VideoPsalm/SongBooks`,
+      `${userProfile}/Documents/VideoPsalm/SongBooks`,
       `${appData}/VideoPsalm/Songbooks`,
     ],
   };
@@ -65,4 +98,30 @@ export function resolveSoftwareLibraryPath(selectedPath: string, app: SupportedA
 
   // User selected software root or parent folder -> append standard subfolder
   return `${norm}/${subfolder}`;
+}
+
+/**
+ * Probes the local machine via Tauri IPC to detect real installed software libraries.
+ * Falls back gracefully in web preview mode.
+ */
+export async function detectInstalledLibraries(): Promise<DetectedAppPaths> {
+  const isTauri =
+    typeof window !== 'undefined' &&
+    Boolean((window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__);
+
+  if (isTauri) {
+    try {
+      const { invoke } = await import('@tauri-apps/api/core');
+      const detected = await invoke<DetectedAppPaths>('detect_installed_libraries');
+      return detected;
+    } catch (err) {
+      console.warn('Failed to detect installed libraries via Tauri IPC:', err);
+    }
+  }
+
+  return {
+    propresenter: null,
+    freeshow: null,
+    videopsalm: null,
+  };
 }

@@ -2,6 +2,7 @@ import { render, screen, fireEvent, cleanup, act } from '@testing-library/react'
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { SoftwareSetup, type DetectedSoftware } from '../src/components/onboarding/SoftwareSetup';
 import * as dialogModule from '../src/lib/dialog';
+import * as pathsModule from '../src/lib/paths';
 
 describe('SoftwareSetup Onboarding UI', () => {
   beforeEach(() => {
@@ -42,6 +43,23 @@ describe('SoftwareSetup Onboarding UI', () => {
 
     // Subfolder "Songbooks" is automatically resolved
     expect(screen.getByText('D:/Custom/VideoPsalm/Songbooks')).toBeDefined();
+  });
+
+  it('automatically probes and displays installed software on mount when initialSoftware is omitted', async () => {
+    vi.spyOn(pathsModule, 'detectInstalledLibraries').mockResolvedValue({
+      propresenter: 'D:/Documents/ProPresenter/Libraries',
+      freeshow: 'D:/Documents/FreeShow/shows',
+      videopsalm: 'C:/Users/Public/Documents/VideoPsalm/SongBooks',
+    });
+
+    await act(async () => {
+      render(<SoftwareSetup onComplete={() => {}} />);
+    });
+
+    expect(screen.getByText('D:/Documents/ProPresenter/Libraries')).toBeDefined();
+    expect(screen.getByText('D:/Documents/FreeShow/shows')).toBeDefined();
+    expect(screen.getByText('C:/Users/Public/Documents/VideoPsalm/SongBooks')).toBeDefined();
+    expect(screen.getAllByText(/auto-detected/i).length).toBe(3);
   });
 
   it('enables Continue button when at least two applications are configured', () => {

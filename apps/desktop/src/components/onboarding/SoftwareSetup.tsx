@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { CheckCircle2, AlertCircle, FolderPlus, ArrowRight, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, AlertCircle, FolderPlus, ArrowRight, ShieldCheck, RefreshCw } from 'lucide-react';
 import { pickDirectory } from '../../lib/dialog';
-import { resolveSoftwareLibraryPath, type SupportedApp } from '../../lib/paths';
+import {
+  resolveSoftwareLibraryPath,
+  detectInstalledLibraries,
+  type SupportedApp,
+} from '../../lib/paths';
 
 export interface SoftwareConfig {
   detected: boolean;
@@ -47,6 +51,40 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
       videopsalm: { detected: false, path: null },
     }
   );
+  const [isDetecting, setIsDetecting] = useState(false);
+
+  // Auto-detect installed presentation libraries on mount
+  useEffect(() => {
+    if (initialSoftware) return;
+
+    let cancelled = false;
+    async function runDetection() {
+      setIsDetecting(true);
+      try {
+        const probed = await detectInstalledLibraries();
+        if (cancelled) return;
+
+        setSoftware((prev) => ({
+          propresenter: probed.propresenter
+            ? { detected: true, path: probed.propresenter }
+            : prev.propresenter,
+          freeshow: probed.freeshow
+            ? { detected: true, path: probed.freeshow }
+            : prev.freeshow,
+          videopsalm: probed.videopsalm
+            ? { detected: true, path: probed.videopsalm }
+            : prev.videopsalm,
+        }));
+      } finally {
+        if (!cancelled) setIsDetecting(false);
+      }
+    }
+
+    void runDetection();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialSoftware]);
 
   const handlePick = async (app: SupportedApp) => {
     try {
@@ -82,12 +120,17 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
           <Badge variant="outline" className="text-[10px] font-mono">
             Setup
           </Badge>
+          {isDetecting && (
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground ml-auto animate-pulse">
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              Scanning for installed software...
+            </span>
+          )}
         </div>
         <h1 className="text-lg font-bold mt-2">Connect Your Presentation Libraries</h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Select or verify the folders where your worship presentations are stored. Pick either the
-          software root folder (e.g. <span className="font-mono">Documents/ProPresenter</span>) or its
-          library subfolder directly. Yachad will automatically resolve the exact library path.
+          Yachad probes your workstation configuration files to automatically detect installed presentation software.
+          You can also manually pick any software root or library folder.
         </p>
       </div>
 
@@ -108,7 +151,7 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
                   {isConfigured ? (
                     <Badge variant="default" className="text-[10px] py-0 px-2 gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      Connected
+                      Auto-Detected & Connected
                     </Badge>
                   ) : (
                     <Badge variant="secondary" className="text-[10px] py-0 px-2 gap-1 text-muted-foreground">
@@ -124,7 +167,7 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
                   </span>
                 ) : (
                   <span className="text-[11px] text-muted-foreground italic mt-0.5">
-                    Click &quot;Select {meta.name} Folder&quot; to locate
+                    Click &quot;Select {meta.name} Folder&quot; to locate manually
                   </span>
                 )}
               </div>
