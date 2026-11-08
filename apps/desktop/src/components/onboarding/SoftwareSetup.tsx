@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../ui/card';
 import { CheckCircle2, AlertCircle, FolderPlus, ArrowRight, ShieldCheck, RefreshCw } from 'lucide-react';
 import { pickDirectory } from '../../lib/dialog';
 import {
@@ -111,30 +112,32 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
   const canContinue = configuredCount >= 2;
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-3xl mx-auto font-sans text-foreground">
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="font-extrabold text-xl tracking-tight text-emerald-600 dark:text-emerald-400">
-            Yachad
-          </span>
-          <Badge variant="outline" className="text-[10px] font-mono">
-            Setup
-          </Badge>
+    <Card className="max-w-3xl mx-auto shadow-md">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-extrabold text-xl tracking-tight text-emerald-600 dark:text-emerald-400">
+              Yachad
+            </span>
+            <Badge variant="outline" className="text-[10px] font-mono">
+              Setup
+            </Badge>
+          </div>
           {isDetecting && (
-            <span className="flex items-center gap-1 text-[11px] text-muted-foreground ml-auto animate-pulse">
-              <RefreshCw className="w-3 h-3 animate-spin" />
+            <span className="flex items-center gap-1.5 text-xs text-muted-foreground animate-pulse">
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               Scanning for installed software...
             </span>
           )}
         </div>
-        <h1 className="text-lg font-bold mt-2">Connect Your Presentation Libraries</h1>
-        <p className="text-xs text-muted-foreground mt-1">
+        <CardTitle className="text-lg font-bold mt-1">Connect Your Presentation Libraries</CardTitle>
+        <CardDescription>
           Yachad probes your workstation configuration files to automatically detect installed presentation software.
           You can also manually pick any software root or library folder.
-        </p>
-      </div>
+        </CardDescription>
+      </CardHeader>
 
-      <div className="flex flex-col gap-3">
+      <CardContent className="flex flex-col gap-3">
         {(['propresenter', 'freeshow', 'videopsalm'] as SupportedApp[]).map((app) => {
           const meta = APP_META[app];
           const config = software[app];
@@ -143,7 +146,7 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
           return (
             <div
               key={app}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border border-border bg-card shadow-xs gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border border-border bg-card/60 shadow-2xs gap-3"
             >
               <div className="flex flex-col gap-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -184,9 +187,9 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
             </div>
           );
         })}
-      </div>
+      </CardContent>
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-4 rounded-lg bg-muted/40 border border-border gap-3">
+      <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-muted/30">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>
@@ -204,7 +207,7 @@ export function SoftwareSetup({ initialSoftware, onComplete }: SoftwareSetupProp
           <span>Confirm & Start Yachad</span>
           <ArrowRight className="w-4 h-4" />
         </Button>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }
